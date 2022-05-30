@@ -8,7 +8,7 @@ Configuración estandar de esta aplicación en el archivo docker-compose.yml:
 
 ```yml
 labeler:
-    image: docker.gnoss.com/labeler
+    image: gnoss/labeler
     env_file: .env
     ports:
      - ${puerto_labeler}:80
