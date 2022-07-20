@@ -10,9 +10,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\..\Solucion .net Core\Gnoss.Commons\Gnoss.Web.LabelerService\Gnoss.Web.LabelerService.csproj" />
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.Gnoss.CL\Es.Riam.Gnoss.CL.csproj" />
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.Gnoss.UtilServiciosWeb\Es.Riam.Gnoss.UtilServiciosWeb.csproj" />
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.Gnoss.Util\Es.Riam.Gnoss.Util.csproj" />
+    <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.InterfacesOpen\Es.Riam.InterfacesOpen.csproj" />
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.OpenReplication\Es.Riam.OpenReplication.csproj" />
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.Util\Es.Riam.Util.csproj" />
   </ItemGroup>
