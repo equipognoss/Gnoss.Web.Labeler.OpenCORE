@@ -2,7 +2,7 @@
 
 # Gnoss.Web.Labeler.OpenCORE
 
-![](https://github.com/equipognoss/Gnoss.Web.Labeler.OpenCORE/workflows/BuildWeb/badge.svg)
+![](https://github.com/equipognoss/Gnoss.Web.Labeler.OpenCORE/workflows/BuildLabeler/badge.svg)
 
 Aplicación Web que ofrece etiquetas a partir de un título y/o una descripción. Se usa en la edición de recursos para proponerle etiquetas al usuario. 
 
