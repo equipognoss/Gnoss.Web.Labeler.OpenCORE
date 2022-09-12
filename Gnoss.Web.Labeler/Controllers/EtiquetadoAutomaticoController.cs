@@ -10,6 +10,7 @@ using Es.Riam.InterfacesOpen;
 using Es.Riam.Util;
 using Es.Riam.Util.AnalisisSintactico;
 using Gnoss.Web.LabelerService;
+//using Gnoss.Web.LabelerService;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -146,9 +147,7 @@ namespace Gnoss.Web.Labeler.Controllers
 
                 titulo = HttpUtility.UrlDecode(titulo);
                 descripcion = UtilCadenas.ReemplazarCaracteresHTML(HttpUtility.UrlDecode(descripcion));
-                ////////////////////////////////////////////////
-                resultados = mLabelerService.ObtenerEtiquetas(titulo, descripcion, out resultadosPropuestos, ProyectoID, documentoID, extension);//ObtenerEtiquetasDeTituloYDescripcion(titulo, descripcion, out resultadosPropuestos);
-                /////////////////////////////////////////
+                resultados = mLabelerService.ObtenerEtiquetas(titulo, descripcion, out resultadosPropuestos, ProyectoID, documentoID, extension);
                 //Obtengo los enlaces
                 string resultadosEnlaces = "";
 
