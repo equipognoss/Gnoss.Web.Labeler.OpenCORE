@@ -21,6 +21,7 @@ namespace Gnoss.Web.Labeler
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
                 });
     }
 }
