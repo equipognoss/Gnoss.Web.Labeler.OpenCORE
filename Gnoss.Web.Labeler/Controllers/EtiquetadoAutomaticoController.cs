@@ -3,6 +3,7 @@ using Es.Riam.Gnoss.AD.EntityModel;
 using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using Es.Riam.Gnoss.CL;
+using Es.Riam.Gnoss.CL.Trazas;
 using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
 using Es.Riam.Gnoss.UtilServiciosWeb;
@@ -13,6 +14,7 @@ using Gnoss.Web.LabelerService;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -39,6 +41,8 @@ namespace Gnoss.Web.Labeler.Controllers
         private EntityContextBASE mEntityContextBASE;
         private IServicesUtilVirtuosoAndReplication mServicesUtilVirtuosoAndReplication;
         private ILabelerService mLabelerService;
+        private static object BLOQUEO_COMPROBACION_TRAZA = new object();
+        private static DateTime HORA_COMPROBACION_TRAZA;
 
         public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService)
         {
@@ -247,6 +251,43 @@ namespace Gnoss.Web.Labeler.Controllers
         }
 
         #endregion
+
+        #region Métodos de trazas
+        [NonAction]
+        private void IniciarTraza()
+        {
+            if (DateTime.Now > HORA_COMPROBACION_TRAZA)
+            {
+                lock (BLOQUEO_COMPROBACION_TRAZA)
+                {
+                    if (DateTime.Now > HORA_COMPROBACION_TRAZA)
+                    {
+                        HORA_COMPROBACION_TRAZA = DateTime.Now.AddSeconds(15);
+                        TrazasCL trazasCL = new TrazasCL(mEntityContext, mLoggingService, mRedisCacheWrapper, mConfigService, mServicesUtilVirtuosoAndReplication);
+                        string tiempoTrazaResultados = trazasCL.ObtenerTrazaEnCache("labeler");
+
+                        if (!string.IsNullOrEmpty(tiempoTrazaResultados))
+                        {
+                            int valor = 0;
+                            int.TryParse(tiempoTrazaResultados, out valor);
+                            LoggingService.TrazaHabilitada = true;
+                            LoggingService.TiempoMinPeticion = valor; //Para sacar los segundos
+                        }
+                        else
+                        {
+                            LoggingService.TrazaHabilitada = false;
+                            LoggingService.TiempoMinPeticion = 0;
+                        }
+                    }
+                }
+            }
+        }
+        #endregion
+
+        public override void OnActionExecuting(ActionExecutingContext filterContext)
+        {
+            IniciarTraza();
+        }
 
         #region Métodos generales
 
