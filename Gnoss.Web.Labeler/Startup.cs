@@ -43,17 +43,31 @@ namespace Gnoss.Web.Labeler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+			ILoggerFactory loggerFactory =
+			LoggerFactory.Create(builder =>
+			{
+				builder.AddConfiguration(Configuration.GetSection("Logging"));
+				builder.AddSimpleConsole(options =>
+				{
+					options.IncludeScopes = true;
+					options.SingleLine = true;
+					options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
+					options.UseUtcTimestamp = true;
+				});
+			});
 
-            bool cargado = false;
+			services.AddSingleton(loggerFactory);
 
             services.AddCors(options =>
             {
                 options.AddPolicy(name: "_myAllowSpecificOrigins",
                                   builder =>
                                   {
-                                      builder.AllowAnyOrigin();
-                                      builder.AllowAnyMethod();
-                                  });
+									  builder.SetIsOriginAllowed(UtilServicios.ComprobarDominioPermitidoCORS);
+									  builder.AllowAnyHeader();
+									  builder.AllowAnyMethod();
+									  builder.AllowCredentials();
+								  });
             });
 
             services.AddControllers();
@@ -81,13 +95,12 @@ namespace Gnoss.Web.Labeler
             {
                 bdType = Configuration.GetConnectionString("connectionType");
             }
-            if (bdType.Equals("2"))
+            if (bdType.Equals("2") || bdType.Equals("1"))
             {
                 services.AddScoped(typeof(DbContextOptions<EntityContext>));
                 services.AddScoped(typeof(DbContextOptions<EntityContextBASE>));
             }
             services.AddSingleton(typeof(ConfigService));
-            services.AddSingleton<ILoggerFactory, LoggerFactory>();
 
             services.AddSession(options => {
                 options.IdleTimeout = TimeSpan.FromMinutes(60); // Tiempo de expiración   
@@ -125,7 +138,17 @@ namespace Gnoss.Web.Labeler
 
                         );
             }
-            else if (bdType.Equals("2"))
+			else if (bdType.Equals("1"))
+			{
+				services.AddDbContext<EntityContext, EntityContextOracle>(options =>
+				options.UseOracle(acid)
+				);
+				services.AddDbContext<EntityContextBASE, EntityContextBASEOracle>(options =>
+				options.UseOracle(baseConnection)
+
+				);
+			}
+			else if (bdType.Equals("2"))
             {
                 services.AddDbContext<EntityContext, EntityContextPostgres>(opt =>
                 {
@@ -152,8 +175,8 @@ namespace Gnoss.Web.Labeler
             // Resolve the services from the service provider
 
             var entity = sp.GetService<EntityContext>();
-
-            services.AddSwaggerGen(c =>
+			UtilServicios.CargarDominiosPermitidosCORS(entity);
+			services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Gnoss.Web.ServiceAutocompleteTags", Version = "v1" });
             });
