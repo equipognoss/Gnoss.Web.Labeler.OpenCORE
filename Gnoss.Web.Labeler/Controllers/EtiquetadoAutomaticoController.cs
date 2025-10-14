@@ -3,6 +3,7 @@ using Es.Riam.Gnoss.AD.EntityModel;
 using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using Es.Riam.Gnoss.CL;
+using Es.Riam.Gnoss.CL.ServiciosGenerales;
 using Es.Riam.Gnoss.CL.Trazas;
 using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
@@ -15,6 +16,8 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.Extensions.Logging;
+using Serilog.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -43,8 +46,9 @@ namespace Gnoss.Web.Labeler.Controllers
         private ILabelerService mLabelerService;
         private static object BLOQUEO_COMPROBACION_TRAZA = new object();
         private static DateTime HORA_COMPROBACION_TRAZA;
-
-        public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService)
+        private ILogger mlogger;
+        private ILoggerFactory mLoggerFactory;
+        public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService, ILogger<EtiquetadoAutomaticoController> logger, ILoggerFactory loggerFactory)
         {
             mEntityContext = entityContext;
             mLoggingService = loggingService;
@@ -54,8 +58,10 @@ namespace Gnoss.Web.Labeler.Controllers
             mHttpContextAccessor = httpContextAccessor;
             mGnossCache = gnossCache;
             mEntityContextBASE = entityContextBASE;
-            mLabelerService = labelerService;  
-            mUtilServicios = new UtilServicios(loggingService, entityContext, configService, redisCacheWrapper, gnossCache, servicesUtilVirtuosoAndReplication);
+            mLabelerService = labelerService;
+            mlogger = logger;
+            mLoggerFactory = loggerFactory;
+            mUtilServicios = new UtilServicios(loggingService, entityContext, configService, redisCacheWrapper, gnossCache, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<UtilServicios>(), mLoggerFactory);
         }
 
         #region Metodos web
@@ -263,7 +269,7 @@ namespace Gnoss.Web.Labeler.Controllers
                     if (DateTime.Now > HORA_COMPROBACION_TRAZA)
                     {
                         HORA_COMPROBACION_TRAZA = DateTime.Now.AddSeconds(15);
-                        TrazasCL trazasCL = new TrazasCL(mEntityContext, mLoggingService, mRedisCacheWrapper, mConfigService, mServicesUtilVirtuosoAndReplication);
+                        TrazasCL trazasCL = new TrazasCL(mEntityContext, mLoggingService, mRedisCacheWrapper, mConfigService, mServicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<TrazasCL>(), mLoggerFactory);
                         string tiempoTrazaResultados = trazasCL.ObtenerTrazaEnCache("labeler");
 
                         if (!string.IsNullOrEmpty(tiempoTrazaResultados))

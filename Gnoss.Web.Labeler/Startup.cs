@@ -8,6 +8,9 @@ using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
 using Es.Riam.Gnoss.Util.Seguridad;
 using Es.Riam.Gnoss.UtilServiciosWeb;
+using Es.Riam.Interfaces.InterfacesOpen;
+using Es.Riam.InterfacesOpen;
+using Es.Riam.Open;
 using Es.Riam.OpenReplication;
 using Es.Riam.Util;
 using Microsoft.AspNetCore.Builder;
@@ -82,9 +85,10 @@ namespace Gnoss.Web.Labeler
             services.AddScoped(typeof(Configuracion));
             services.AddScoped(typeof(GnossCache));
             services.AddScoped(typeof(VirtuosoAD));
-            //services.AddScoped(typeof(UtilServicios));
             services.AddScoped<IServicesUtilVirtuosoAndReplication, ServicesVirtuosoAndBidirectionalReplicationOpen>();
+            services.AddScoped<ILabelerService, LabelerArtificialIntelligenceOpenService>();
             services.AddScoped(typeof(RelatedVirtuosoCL));
+            services.AddScoped<IAvailableServices, AvailableServicesOpen>();
             string bdType = "";
             IDictionary environmentVariables = Environment.GetEnvironmentVariables();
             if (environmentVariables.Contains("connectionType"))
@@ -131,10 +135,10 @@ namespace Gnoss.Web.Labeler
             if (bdType.Equals("0"))
             {
                 services.AddDbContext<EntityContext>(options =>
-                        options.UseSqlServer(acid)
+                        options.UseSqlServer(acid, o => o.UseCompatibilityLevel(110))
                         );
                 services.AddDbContext<EntityContextBASE>(options =>
-                        options.UseSqlServer(baseConnection)
+                        options.UseSqlServer(baseConnection, o => o.UseCompatibilityLevel(110))
 
                         );
             }

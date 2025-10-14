@@ -1,24 +1,27 @@
-﻿using Es.Riam.Gnoss.CL.LinkedOpenDataCL;
-using Es.Riam.Gnoss.Elementos.LinkedOpenData;
-using Es.Riam.Gnoss.Recursos;
-using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System;
-using Es.Riam.Util;
-using Es.Riam.AbstractsOpen;
+﻿using Es.Riam.AbstractsOpen;
 using Es.Riam.Gnoss.AD.EntityModel;
 using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using Es.Riam.Gnoss.CL;
+using Es.Riam.Gnoss.CL.LinkedOpenDataCL;
+using Es.Riam.Gnoss.CL.ServiciosGenerales;
+using Es.Riam.Gnoss.Elementos.LinkedOpenData;
+using Es.Riam.Gnoss.Recursos;
 using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
 using Es.Riam.Gnoss.UtilServiciosWeb;
 using Es.Riam.InterfacesOpen;
+using Es.Riam.Util;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Serilog.Core;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Linq;
 
 namespace Gnoss.Web.Labeler.Controllers
 {
@@ -38,10 +41,11 @@ namespace Gnoss.Web.Labeler.Controllers
         private EntityContextBASE mEntityContextBASE;
         private IServicesUtilVirtuosoAndReplication mServicesUtilVirtuosoAndReplication;
         private ILabelerService mLabelerService;
-
+        private ILogger mlogger;
+        private ILoggerFactory mLoggerFactory;
         private bool mHayConexionLOD;
 
-        public EtiquetadoLODController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService)
+        public EtiquetadoLODController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService, ILogger<EtiquetadoLODController> logger, ILoggerFactory loggerFactory)
         {
             mEntityContext = entityContext;
             mLoggingService = loggingService;
@@ -52,8 +56,10 @@ namespace Gnoss.Web.Labeler.Controllers
             mGnossCache = gnossCache;
             mEntityContextBASE = entityContextBASE;
             mLabelerService = labelerService;
+            mlogger = logger;
+            mLoggerFactory = loggerFactory;
             mHayConexionLOD = mConfigService.ObtenerConexionRedisBD("lod") > 0;
-            mUtilServicios = new UtilServicios(loggingService, entityContext, configService, redisCacheWrapper, gnossCache, servicesUtilVirtuosoAndReplication);
+            mUtilServicios = new UtilServicios(loggingService, entityContext, configService, redisCacheWrapper, gnossCache, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<UtilServicios>(), mLoggerFactory);
         }
 
         [HttpGet]
@@ -72,12 +78,12 @@ namespace Gnoss.Web.Labeler.Controllers
                     string[] separadores = { "," };
                     string[] listaTags = tags.Replace("\"", "").Split(separadores, StringSplitOptions.RemoveEmptyEntries);
 
-                    LinkedOpenDataCL LodCL = new LinkedOpenDataCL("lod", mEntityContext, mLoggingService, mRedisCacheWrapper, mConfigService, mServicesUtilVirtuosoAndReplication);
+                    LinkedOpenDataCL LodCL = new LinkedOpenDataCL("lod", mEntityContext, mLoggingService, mRedisCacheWrapper, mConfigService, mServicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<LinkedOpenDataCL>(), mLoggerFactory);
                     LodCL.Dominio = ObtenerDominioAplicacion();
 
                     Dictionary<string, EntidadLOD> resultadosCache = LodCL.ObtenerListaResourcesDeListaResultados(docID);
 
-                    UtilIdiomas utilIdiomas = new UtilIdiomas(languageCode, mLoggingService, mEntityContext, mConfigService, mRedisCacheWrapper);
+                    UtilIdiomas utilIdiomas = new UtilIdiomas(languageCode, mLoggingService, mEntityContext, mConfigService, mRedisCacheWrapper, mLoggerFactory.CreateLogger<UtilIdiomas>(), mLoggerFactory);
 
                     foreach (string tag in listaTags)
                     {
@@ -97,7 +103,7 @@ namespace Gnoss.Web.Labeler.Controllers
                 }
                 else
                 {
-                    mLoggingService.GuardarLogError("Para poder usar etiquetado con linked data deben estar configuradas las variables de entorno 'redis__lod__io__master', 'redis__lod__io__read', 'redis__lod__bd' y 'redis__lod___timeout'.");
+                    mLoggingService.GuardarLogError("Para poder usar etiquetado con linked data deben estar configuradas las variables de entorno 'redis__lod__io__master', 'redis__lod__io__read', 'redis__lod__bd' y 'redis__lod___timeout'.",mlogger);
                 }
                 string funcionCallBack = Request.Query["callback"];
 
@@ -105,7 +111,7 @@ namespace Gnoss.Web.Labeler.Controllers
             }
             catch (Exception ex)
             {
-                mLoggingService.GuardarLogError(ex);
+                mLoggingService.GuardarLogError(ex,mlogger);
                 throw;
             }
         }
