@@ -9,13 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl
 
 WORKDIR /app
 
-COPY Gnoss.Web.Labeler/*.csproj ./
-
-RUN dotnet restore
-
 COPY . ./
 
-RUN dotnet publish Gnoss.Web.Labeler/Gnoss.Web.Labeler.csproj -c Release -o out
+RUN dotnet restore Gnoss.Web.Labeler.OpenCORE/Gnoss.Web.Labeler/Gnoss.Web.Labeler.csproj
+
+RUN dotnet publish Gnoss.Web.Labeler.OpenCORE/Gnoss.Web.Labeler/Gnoss.Web.Labeler.csproj -c Release -o out
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
