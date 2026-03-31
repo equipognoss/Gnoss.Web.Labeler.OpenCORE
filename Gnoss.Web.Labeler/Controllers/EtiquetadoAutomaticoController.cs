@@ -46,7 +46,7 @@ namespace Gnoss.Web.Labeler.Controllers
         private ILabelerService mLabelerService;
         private static object BLOQUEO_COMPROBACION_TRAZA = new object();
         private static DateTime HORA_COMPROBACION_TRAZA;
-        private ILogger mlogger;
+        private ILogger mLogger;
         private ILoggerFactory mLoggerFactory;
         public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService, ILogger<EtiquetadoAutomaticoController> logger, ILoggerFactory loggerFactory)
         {
@@ -59,7 +59,7 @@ namespace Gnoss.Web.Labeler.Controllers
             mGnossCache = gnossCache;
             mEntityContextBASE = entityContextBASE;
             mLabelerService = labelerService;
-            mlogger = logger;
+            mLogger = logger;
             mLoggerFactory = loggerFactory;
             mUtilServicios = new UtilServicios(loggingService, entityContext, configService, redisCacheWrapper, gnossCache, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<UtilServicios>(), mLoggerFactory);
         }
@@ -109,7 +109,7 @@ namespace Gnoss.Web.Labeler.Controllers
             }
             catch (Exception ex)
             {
-                mUtilServicios.GuardarLog(ex.Message + "\r\nPila: " + ex.StackTrace, "error");
+                mLoggingService.GuardarLogError(ex, mLogger);
                 throw;
             }
             return resultadosDirectos;
@@ -177,7 +177,7 @@ namespace Gnoss.Web.Labeler.Controllers
             }
             catch (Exception ex)
             {
-                mUtilServicios.GuardarLog(ex.Message + "\r\nPila: " + ex.StackTrace, "error");
+                mLoggingService.GuardarLogError(ex, mLogger);
                 throw;
             }
         }
@@ -251,7 +251,7 @@ namespace Gnoss.Web.Labeler.Controllers
             }
             catch (Exception ex)
             {
-                mUtilServicios.GuardarLog(ex.Message + "\r\nPila: " + ex.StackTrace, "error");
+                mLoggingService.GuardarLogError(ex, mLogger);
                 throw;
             }
         }

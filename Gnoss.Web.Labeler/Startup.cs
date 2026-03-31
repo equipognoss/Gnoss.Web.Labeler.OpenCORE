@@ -46,20 +46,10 @@ namespace Gnoss.Web.Labeler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-			ILoggerFactory loggerFactory =
-			LoggerFactory.Create(builder =>
-			{
-				builder.AddConfiguration(Configuration.GetSection("Logging"));
-				builder.AddSimpleConsole(options =>
-				{
-					options.IncludeScopes = true;
-					options.SingleLine = true;
-					options.TimestampFormat = "yyyy-MM-dd HH:mm:ss ";
-					options.UseUtcTimestamp = true;
-				});
-			});
-
-			services.AddSingleton(loggerFactory);
+            LoggingService.ConfigurarLogging(services, Configuration);
+            // Provider temporal solo para el logger de arranque
+            using var tempProvider = services.BuildServiceProvider();
+            var logger = tempProvider.GetRequiredService<ILogger<Startup>>();
 
             services.AddCors(options =>
             {
@@ -136,7 +126,7 @@ namespace Gnoss.Web.Labeler
             UtilTelemetry utilTelemetry = sp.GetService<UtilTelemetry>();
             loggingService.AgregarEntrada("INICIO Application_Start");
             LoggingService.RUTA_DIRECTORIO_ERROR = Path.Combine(mEnvironment.ContentRootPath, "logs");
-            loggingService.GuardarLogError("Application_Start");
+            loggingService.GuardarLog("Application_Start", logger);
             // Resolve the services from the service provider
 
             var entity = sp.GetService<EntityContext>();
