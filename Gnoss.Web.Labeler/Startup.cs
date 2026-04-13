@@ -46,7 +46,6 @@ namespace Gnoss.Web.Labeler
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            LoggingService.ConfigurarLogging(services, Configuration);
             // Provider temporal solo para el logger de arranque
             using var tempProvider = services.BuildServiceProvider();
             var logger = tempProvider.GetRequiredService<ILogger<Startup>>();
