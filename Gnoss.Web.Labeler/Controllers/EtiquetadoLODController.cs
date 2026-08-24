@@ -169,28 +169,6 @@ namespace Gnoss.Web.Labeler.Controllers
             descriptionFB.Append("<span class='moreInfo'>");
             descriptionFB.Append($"<a href='{ObtenerUrlWikipediaDesdeDbpedia(uriDbPedia)}' class='wikipedia' target='_blank'></a>");
             descriptionFB.Append("</span>");
-
-            foreach (string sameAs in listaSameAs)
-            {
-                if (sameAs.Contains("sws.geonames.org"))
-                {
-                    descriptionFB.Append("<span class='moreInfo'>");
-                    descriptionFB.Append($"<a href='{sameAs}' class='geonames' target='_blank'></a>");
-                    descriptionFB.Append("</span>");
-                }
-                else if (sameAs.Contains("rdf.freebase.com"))
-                {
-                    descriptionFB.Append("<span class='moreInfo'>");
-                    descriptionFB.Append($"<a href='{sameAs}' class='freeBase' target='_blank'></a>");
-                    descriptionFB.Append("</span>");
-                }
-                else if (sameAs.Contains("topics.nytimes.com") || sameAs.Contains("data.nytimes.com"))
-                {
-                    descriptionFB.Append("<span class='moreInfo'>");
-                    descriptionFB.Append($"<a href='{sameAs}' class='newYorkTimes' target='_blank'></a>");
-                    descriptionFB.Append("</span>");
-                }
-            }
             descriptionFB.Append("</li>");
             descriptionFB.Append("</ul>");
             descriptionFB.Append("</div>");
