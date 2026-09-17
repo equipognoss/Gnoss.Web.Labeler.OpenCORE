@@ -37,7 +37,6 @@ namespace Gnoss.Web.Labeler.Controllers
         private LoggingService mLoggingService;
         private ConfigService mConfigService;
         private RedisCacheWrapper mRedisCacheWrapper;
-        private VirtuosoAD mVirtuosoAD;
         private IHttpContextAccessor mHttpContextAccessor;
         private UtilServicios mUtilServicios;
         private GnossCache mGnossCache;
@@ -48,12 +47,11 @@ namespace Gnoss.Web.Labeler.Controllers
         private static DateTime HORA_COMPROBACION_TRAZA;
         private ILogger mLogger;
         private ILoggerFactory mLoggerFactory;
-        public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, VirtuosoAD virtuosoAD, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService, ILogger<EtiquetadoAutomaticoController> logger, ILoggerFactory loggerFactory)
+        public EtiquetadoAutomaticoController(EntityContext entityContext, LoggingService loggingService, ConfigService configService, RedisCacheWrapper redisCacheWrapper, IHttpContextAccessor httpContextAccessor, GnossCache gnossCache, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication, ILabelerService labelerService, ILogger<EtiquetadoAutomaticoController> logger, ILoggerFactory loggerFactory)
         {
             mEntityContext = entityContext;
             mLoggingService = loggingService;
             mConfigService = configService;
-            mVirtuosoAD = virtuosoAD;
             mRedisCacheWrapper = redisCacheWrapper;
             mHttpContextAccessor = httpContextAccessor;
             mGnossCache = gnossCache;

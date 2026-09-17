@@ -4,6 +4,8 @@ using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using Es.Riam.Gnoss.CL;
 using Es.Riam.Gnoss.CL.RelatedVirtuoso;
+using Es.Riam.Gnoss.HealthChecks;
+using Es.Riam.Gnoss.RabbitMQ;
 using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
 using Es.Riam.Gnoss.Util.Seguridad;
@@ -15,20 +17,16 @@ using Es.Riam.OpenReplication;
 using Es.Riam.Util;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
+using Microsoft.OpenApi;
+using ServicioAutoCompletarMVC;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Gnoss.Web.Labeler
 {
@@ -64,16 +62,14 @@ namespace Gnoss.Web.Labeler
 
             services.AddControllers();
             services.AddHttpContextAccessor();
-            services.AddScoped(typeof(UtilTelemetry));
             services.AddScoped(typeof(Usuario));
             services.AddScoped(typeof(UtilPeticion));
             services.AddScoped(typeof(Conexion));
             services.AddScoped(typeof(UtilGeneral));
             services.AddScoped(typeof(LoggingService));
-            services.AddScoped(typeof(RedisCacheWrapper));
+            services.AddSingleton(typeof(RedisCacheWrapper));
             services.AddScoped(typeof(Configuracion));
             services.AddScoped(typeof(GnossCache));
-            services.AddScoped(typeof(VirtuosoAD));
             services.AddScoped<IServicesUtilVirtuosoAndReplication, ServicesVirtuosoAndBidirectionalReplicationOpen>();
             services.AddScoped<ILabelerService, LabelerArtificialIntelligenceOpenService>();
             services.AddScoped(typeof(RelatedVirtuosoCL));
@@ -122,7 +118,6 @@ namespace Gnoss.Web.Labeler
             var sp = services.BuildServiceProvider();
             // Resolve the services from the service provider
             var loggingService = sp.GetService<LoggingService>();
-            UtilTelemetry utilTelemetry = sp.GetService<UtilTelemetry>();
             loggingService.AgregarEntrada("INICIO Application_Start");
             LoggingService.RUTA_DIRECTORIO_ERROR = Path.Combine(mEnvironment.ContentRootPath, "logs");
             loggingService.GuardarLog("Application_Start", logger);
@@ -130,7 +125,14 @@ namespace Gnoss.Web.Labeler
 
             var entity = sp.GetService<EntityContext>();
 			UtilServicios.CargarDominiosPermitidosCORS(entity);
-			services.AddSwaggerGen(c =>
+            var hcConfigService = services.BuildServiceProvider().GetService<ConfigService>();
+            services.AddHealthChecks()
+                .AddGnossDatabaseHealthCheck<EntityContext>(bdType, hcConfigService.ObtenerSqlConnectionString())
+                .AddGnossRedisHealthCheck(hcConfigService.ObtenerConexionRedisIPMaster("redis"))
+                .AddGnossVirtuosoHealthCheck(hcConfigService.ObtenerVirtuosoConnectionString().ConnectionString)
+                .AddGnossRabbitMQHealthCheck(hcConfigService.ObtenerRabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN));
+
+            services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Gnoss.Web.ServiceAutocompleteTags", Version = "v1" });
             });
@@ -148,12 +150,14 @@ namespace Gnoss.Web.Labeler
             app.UseSwaggerUI(c => c.SwaggerEndpoint("v1/swagger.json", "Gnoss.Web.Labeler v1"));
 
             app.UseRouting();
-            app.UseCors();
+            app.UseCors("_myAllowSpecificOrigins");
             app.UseSession();
             app.UseAuthorization();
- 
+            app.UseGnossMiddleware();
+            var managementPort = Configuration.GetValue("ManagementPort", 8081);
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapGnossHealthEndpoints(managementPort);
                 endpoints.MapControllers();
             });
         }
